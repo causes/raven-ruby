@@ -108,23 +108,25 @@ module Raven
           int.module = class_parts.join('::')
         end
         evt.interface :stack_trace do |int|
-          int.frames = exc.backtrace.reverse.map do |trace_line|
-            md = BACKTRACE_RE.match(trace_line)
-            raise Error.new("Unable to parse backtrace line: #{trace_line.inspect}") unless md
-            int.frame do |frame|
-              frame.abs_path = md[1]
-              frame.lineno = md[2].to_i
-              frame.function = md[3] if md[3]
-              lib_path = $:.select{|s| frame.abs_path.start_with?(s)}.sort_by{|s| s.length}.last
-              if lib_path
-                frame.filename = frame.abs_path[lib_path.chomp(File::SEPARATOR).length+1..frame.abs_path.length]
-              else
-                frame.filename = frame.abs_path
-              end
-              if configuration[:context_lines]
-                frame.context_line = Raven::LineCache::getline(frame.abs_path, frame.lineno)
-                frame.pre_context = (frame.lineno-configuration[:context_lines]..frame.lineno-1).map{|i| Raven::LineCache.getline(frame.abs_path, i)}.select{|line| line}
-                frame.post_context = (frame.lineno+1..frame.lineno+configuration[:context_lines]).map{|i| Raven::LineCache.getline(frame.abs_path, i)}.select{|line| line}
+          if (exc.backtrace)
+            int.frames = exc.backtrace.reverse.map do |trace_line|
+              md = BACKTRACE_RE.match(trace_line)
+              raise Error.new("Unable to parse backtrace line: #{trace_line.inspect}") unless md
+              int.frame do |frame|
+                frame.abs_path = md[1]
+                frame.lineno = md[2].to_i
+                frame.function = md[3] if md[3]
+                lib_path = $:.select{|s| frame.abs_path.start_with?(s)}.sort_by{|s| s.length}.last
+                if lib_path
+                  frame.filename = frame.abs_path[lib_path.chomp(File::SEPARATOR).length+1..frame.abs_path.length]
+                else
+                  frame.filename = frame.abs_path
+                end
+                if configuration[:context_lines]
+                  frame.context_line = Raven::LineCache::getline(frame.abs_path, frame.lineno)
+                  frame.pre_context = (frame.lineno-configuration[:context_lines]..frame.lineno-1).map{|i| Raven::LineCache.getline(frame.abs_path, i)}.select{|line| line}
+                  frame.post_context = (frame.lineno+1..frame.lineno+configuration[:context_lines]).map{|i| Raven::LineCache.getline(frame.abs_path, i)}.select{|line| line}
+                end
               end
             end
           end
