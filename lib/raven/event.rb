@@ -155,7 +155,7 @@ module Raven
     end
 
     def get_context(path, line, context)
-      lines = (2 * context + 1).times do |i|
+      lines = (2 * context + 1).times.map do |i|
         Raven::LineCache::getline(path, line - context + i)
       end
       [lines[0..context-1], lines[context], lines[context+1..-1]]
