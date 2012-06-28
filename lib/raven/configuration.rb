@@ -25,6 +25,9 @@ module Raven
     # Include module versions in reports?
     attr_accessor :send_modules
 
+    # The subclass of Raven::Event to use
+    attr_accessor :event_class
+
     attr_reader :current_environment
 
     def initialize
@@ -33,6 +36,7 @@ module Raven
       self.environments = %w[ production ]
       self.current_environment = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
       self.send_modules = true
+      self.event_class = Raven::Event
     end
 
     def server=(value)
