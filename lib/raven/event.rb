@@ -102,7 +102,7 @@ module Raven
         evt.level = :error
         evt.parse_exception(exc)
         if (exc.backtrace)
-          int = evt.interface :stack_trace
+          int = evt.interface evt.stack_trace_interface
           int.frames = exc.backtrace.reverse.map do |trace_line|
             int.frame {|frame| evt.parse_backtrace_line(trace_line, frame) }
           end
@@ -164,6 +164,10 @@ module Raven
     def strip_load_path_from(path)
       prefix = $:.select {|s| path.starts_with?(s)}.sort_by {|s| s.length}.last
       prefix ? path[prefix.chomp(File::SEPARATOR).length+1..-1] : path
+    end
+
+    def stack_trace_interface
+      :stack_trace
     end
   end
 end
