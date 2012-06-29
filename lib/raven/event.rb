@@ -102,9 +102,10 @@ module Raven
         evt.level = :error
         evt.parse_exception(exc)
         if (exc.backtrace)
-          int = evt.interface evt.stack_trace_interface
-          int.frames = exc.backtrace.reverse.map do |trace_line|
-            int.frame {|frame| evt.parse_backtrace_line(trace_line, frame) }
+          evt.interface evt.stack_trace_interface do |int|
+            int.frames = exc.backtrace.reverse.map do |trace_line|
+              int.frame {|frame| evt.parse_backtrace_line(trace_line, frame) }
+            end
           end
         end
         block.call(evt) if block
