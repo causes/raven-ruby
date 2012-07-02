@@ -163,7 +163,7 @@ module Raven
     end
 
     def strip_load_path_from(path)
-      prefix = $:.select {|s| path.starts_with?(s)}.sort_by {|s| s.length}.last
+      prefix = $:.select {|s| path.start_with?(s)}.sort_by {|s| s.length}.last
       prefix ? path[prefix.chomp(File::SEPARATOR).length+1..-1] : path
     end
 
