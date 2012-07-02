@@ -52,5 +52,39 @@ describe Raven::Event do
       end
     end
 
+    context 'when the exception has a backtrace' do
+      let(:exception) do
+        e = Exception.new(message)
+        e.stub(:backtrace).and_return([
+          "/path/to/some/file:22:in `function_name'",
+          "/some/other/path:1412:in `other_function'",
+        ])
+        e
+      end
+
+      it 'parses the backtrace' do
+        hash['sentry.interfaces.Stacktrace']['frames'][0]['lineno'].should == 1412
+        hash['sentry.interfaces.Stacktrace']['frames'][0]['function'].should == 'other_function'
+        hash['sentry.interfaces.Stacktrace']['frames'][0]['filename'].should == '/some/other/path'
+
+        hash['sentry.interfaces.Stacktrace']['frames'][1]['lineno'].should == 22
+        hash['sentry.interfaces.Stacktrace']['frames'][1]['function'].should == 'function_name'
+        hash['sentry.interfaces.Stacktrace']['frames'][1]['filename'].should == '/path/to/some/file'
+      end
+
+      context 'when a path in the stack trace is on the laod path' do
+        before do
+          $: << '/some'
+        end
+
+        after do
+          $:.delete('/some')
+        end
+
+        it 'strips prefixes in the load path from frame filenames' do
+          hash['sentry.interfaces.Stacktrace']['frames'][0]['filename'].should == 'other/path'
+        end
+      end
+    end
   end
 end
