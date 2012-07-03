@@ -28,19 +28,25 @@ module Raven
       rescue Error => e
         raise # Don't capture Raven errors
       rescue Exception => e
-        event_class = Raven.configuration.event_class
-        evt = event_class.capture_rack_exception(e, env)
-        Raven.send(evt) if evt
+        send_exception_to_sentry(e, env)
         raise
       end
 
-      if env['rack.exception']
-        event_class = Raven.configuration.event_class
-        evt = event_class.capture_rack_exception(e, env)
-        Raven.send(evt) if evt
-      end
+      rack_exc = env['rack.exception']
+      send_exception_to_sentry(rack_exc, env) if rack_exc
 
       response
     end
+
+  private
+
+    def send_exception_to_sentry(exception, env)
+      event_class = Raven.configuration.event_class
+      evt = event_class.capture_rack_exception(e, env)
+      Raven.send(evt) if evt
+    rescue Exception => e
+      Raven.logger.error("Error handling exception `#{exception}`: #{e}")
+    end
+
   end
 end
